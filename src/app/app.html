@@ -1,0 +1,121 @@
+<div class="app-shell">
+  <header>
+    <div>
+      <p class="eyebrow">Bullet Journal</p>
+      <h1>Daily Command Center</h1>
+    </div>
+    <div class="date-picker">
+      <label for="journal-date">Viewing</label>
+      <input
+        id="journal-date"
+        type="date"
+        [ngModel]="selectedDate"
+        (ngModelChange)="selectDate($event)"
+        max="9999-12-31"
+      />
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Rapid Log</h2>
+          <p>Capture tasks, events, and notes in seconds.</p>
+        </div>
+        <div class="rapid-inputs">
+          <select name="rapidType" [(ngModel)]="rapidType">
+            <option value="task">Task</option>
+            <option value="event">Event</option>
+            <option value="note">Note</option>
+          </select>
+          <input
+            name="rapidItem"
+            type="text"
+            placeholder="Add a bullet..."
+            [(ngModel)]="rapidItem"
+            (keyup.enter)="addRapidLog()"
+          />
+          <button type="button" (click)="addRapidLog()">Add</button>
+        </div>
+      </div>
+
+      <ul class="rapid-log">
+        <li class="placeholder" *ngIf="currentEntry.rapidLog.length === 0">
+          No entries yet. Capture the first thought!
+        </li>
+        <li *ngFor="let item of currentEntry.rapidLog; trackBy: trackByRapid" [class.complete]="item.done">
+          <span class="bullet" [attr.aria-label]="item.type">{{ taskIcons[item.type] }}</span>
+          <div>
+            <p>{{ item.text }}</p>
+            <small *ngIf="item.migratedFrom">migrated from {{ item.migratedFrom }}</small>
+          </div>
+          <div class="actions">
+            <button *ngIf="item.type === 'task'" type="button" (click)="toggleTask(item.id)">
+              {{ item.done ? 'Undo' : 'Done' }}
+            </button>
+            <button type="button" (click)="migrateTask(item.id, -1)">◀︎</button>
+            <button type="button" (click)="migrateTask(item.id, 1)">▶︎</button>
+            <button type="button" (click)="removeTask(item.id)">✕</button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="panel grid">
+      <div>
+        <h3>Reflection</h3>
+        <textarea
+          name="reflections"
+          [ngModel]="currentEntry.reflections"
+          (ngModelChange)="onReflectionChange($event)"
+          placeholder="Wins, lessons, or ideas from today..."
+        ></textarea>
+      </div>
+      <div>
+        <h3>Gratitude</h3>
+        <textarea
+          name="gratitude"
+          [ngModel]="currentEntry.gratitude"
+          (ngModelChange)="onGratitudeChange($event)"
+          placeholder="What are you grateful for?"
+        ></textarea>
+      </div>
+      <div>
+        <h3>Daily Focus</h3>
+        <input
+          name="focus"
+          type="text"
+          [(ngModel)]="focusIdea"
+          (blur)="handleFocusBlur()"
+          placeholder="The mission for the day..."
+        />
+      </div>
+      <div>
+        <h3>Mood</h3>
+        <input
+          name="mood"
+          type="range"
+          min="1"
+          max="5"
+          [ngModel]="currentEntry.mood"
+          (ngModelChange)="onMoodChange($event)"
+        />
+        <p class="mood-label">Mood: {{ currentEntry.mood }}/5</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Upcoming Radar</h2>
+      <div class="timeline" *ngIf="upcomingSummary.length; else emptyRadar">
+        <article *ngFor="let summary of upcomingSummary">
+          <p class="eyebrow">{{ summary.date }}</p>
+          <h4>{{ summary.open }} open bullets</h4>
+        </article>
+      </div>
+      <ng-template #emptyRadar>
+        <p class="placeholder">Start logging to see your upcoming radar.</p>
+      </ng-template>
+    </section>
+  </main>
+</div>
