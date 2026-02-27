@@ -54,6 +54,45 @@ ng e2e
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
+## Firebase setup (Firestore persistence)
+
+This app now stores journal data in **Firebase Firestore** instead of `localStorage`.
+
+### 1) Install dependencies
+
+```bash
+npm install
+```
+
+### 2) Add your Firebase project config
+
+Edit:
+
+- `src/environments/environment.ts`
+
+and replace placeholder values with your Firebase web app config from:
+
+Firebase Console → Project Settings → Your apps → Web app config.
+
+### 3) Firestore document used by the app
+
+The app writes to:
+
+- Collection: `bulletJournal`
+- Document: `default`
+
+Data is stored under the `journal` field.
+
+### 4) One-time localStorage migration
+
+On first load, if Firestore document `bulletJournal/default` does not exist and legacy local data exists under key:
+
+- `bullet-journal-data-angular`
+
+the app uploads that data to Firestore and removes the localStorage key.
+
+If Firestore is unavailable, the app falls back to local/in-memory data for that session and logs warnings in the console.
+
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
