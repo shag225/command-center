@@ -182,6 +182,7 @@ export class App {
         ? this.normalizeJournal(localData)
         : { [this.today]: entryTemplate() };
     } finally {
+      this.selectedDate = this.pickDefaultDate(this.journal);
       this.isHydrating = false;
       this.focusIdea = this.currentEntry.focus || '';
     }
@@ -262,6 +263,19 @@ export class App {
     } catch (error) {
       console.warn('Failed to save Firestore journal. Using local backup.', error);
     }
+  }
+
+  private pickDefaultDate(data: Record<string, DayEntry>): string {
+    if (data[this.today]?.rapidLog?.length) {
+      return this.today;
+    }
+
+    const datedKeys = Object.keys(data).sort();
+    const latestWithItems = [...datedKeys]
+      .reverse()
+      .find((key) => (data[key]?.rapidLog?.length || 0) > 0);
+
+    return latestWithItems || this.today;
   }
 
   private localDateKey(date = new Date()): string {
