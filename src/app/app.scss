@@ -28,7 +28,7 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 0.25em;
   font-size: 0.75rem;
-  color: #7a8092;
+  color: #9ca8c8;
   margin: 0;
 }
 
@@ -40,11 +40,12 @@ h1 {
 }
 
 .date-picker input {
-  border: 1px solid #cbd0dd;
+  border: 1px solid #2e3a57;
   border-radius: 0.6rem;
   padding: 0.5rem 0.8rem;
   font-size: 1rem;
-  background: white;
+  background: #111a2d;
+  color: #e7ecf7;
 }
 
 main {
@@ -54,10 +55,11 @@ main {
 }
 
 .panel {
-  background: white;
+  background: #141f35;
   border-radius: 1.5rem;
   padding: 1.5rem;
-  box-shadow: 0 20px 50px rgba(19, 34, 68, 0.08);
+  border: 1px solid #223150;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .panel-header {
@@ -76,7 +78,7 @@ main {
 
 .panel p {
   margin: 0.2rem 0 0;
-  color: #70778c;
+  color: #a3afcb;
 }
 
 .rapid-inputs {
@@ -89,22 +91,23 @@ main {
 .rapid-inputs input,
 .rapid-inputs button {
   border-radius: 0.8rem;
-  border: 1px solid #cbd0dd;
+  border: 1px solid #2e3a57;
   padding: 0.65rem 0.9rem;
   font-size: 0.95rem;
-  background: #f8f9fc;
+  background: #111a2d;
+  color: #e7ecf7;
 }
 
 .rapid-inputs button {
-  background: #132244;
+  background: #3b82f6;
   color: white;
-  border-color: #132244;
+  border-color: #3b82f6;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .rapid-inputs button:hover {
-  background: #0c1833;
+  background: #2563eb;
 }
 
 .rapid-log {
@@ -123,7 +126,8 @@ main {
   align-items: center;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  border: 1px solid #e2e6f1;
+  border: 1px solid #2a3858;
+  background: #0f182c;
 }
 
 .rapid-log li.complete {
@@ -134,12 +138,12 @@ main {
 .placeholder {
   justify-content: center;
   display: flex;
-  color: #9097ad;
+  color: #9ca8c8;
 }
 
 .bullet {
   font-size: 1.5rem;
-  color: #132244;
+  color: #60a5fa;
 }
 
 .actions {
@@ -148,10 +152,11 @@ main {
 }
 
 .actions button {
-  border: none;
+  border: 1px solid #33466d;
   border-radius: 0.6rem;
   padding: 0.35rem 0.6rem;
-  background: #f0f2fa;
+  background: #17233d;
+  color: #dbe7ff;
   cursor: pointer;
 }
 
@@ -165,7 +170,9 @@ textarea,
 .grid input[type='text'] {
   width: 100%;
   border-radius: 0.9rem;
-  border: 1px solid #d8dcec;
+  border: 1px solid #2f3f62;
+  background: #101a2f;
+  color: #e7ecf7;
   padding: 0.8rem;
   font-size: 0.95rem;
   min-height: 120px;
@@ -181,7 +188,7 @@ input[type='range'] {
 }
 
 .mood-label {
-  color: #50556b;
+  color: #b7c4e3;
   font-weight: 600;
 }
 
@@ -192,10 +199,10 @@ input[type='range'] {
 }
 
 .timeline article {
-  border: 1px solid #e2e6f1;
+  border: 1px solid #2a3858;
   border-radius: 1rem;
   padding: 1rem;
-  background: #f9fafe;
+  background: #0f182c;
 }
 
 .timeline h4 {
