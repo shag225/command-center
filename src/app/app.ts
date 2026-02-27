@@ -40,7 +40,7 @@ const entryTemplate = (): DayEntry => ({
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly today = new Date().toISOString().split('T')[0];
+  protected readonly today = this.localDateKey();
   protected selectedDate = this.today;
   protected journal: Record<string, DayEntry> = { [this.today]: entryTemplate() };
   protected rapidItem = '';
@@ -117,9 +117,9 @@ export class App {
     const item = this.currentEntry.rapidLog.find((entry) => entry.id === id);
     if (!item) return;
 
-    const targetDate = new Date(this.selectedDate);
+    const targetDate = new Date(`${this.selectedDate}T12:00:00`);
     targetDate.setDate(targetDate.getDate() + direction);
-    const targetKey = targetDate.toISOString().split('T')[0];
+    const targetKey = this.localDateKey(targetDate);
 
     const sourceLog = this.currentEntry.rapidLog.filter((entry) => entry.id !== id);
     const targetEntry = this.journal[targetKey] || entryTemplate();
@@ -169,10 +169,10 @@ export class App {
       if (snap.exists()) {
         const remoteJournal = (snap.data()['journal'] as Record<string, DayEntry>) || {};
         this.journal = this.normalizeJournal(remoteJournal);
+        this.writeLocalBackup();
       } else if (localData && Object.keys(localData).length > 0) {
         this.journal = this.normalizeJournal(localData);
         await this.persistJournalToFirestore();
-        this.clearLocalBackup();
       } else {
         this.journal = { [this.today]: entryTemplate() };
       }
@@ -228,10 +228,23 @@ export class App {
     }
   }
 
+  private writeLocalBackup(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      localStorage.setItem(this.localStorageKey, JSON.stringify(this.journal));
+    } catch (error) {
+      console.warn('Failed to write local backup.', error);
+    }
+  }
+
   private persistJournal(): void {
     if (this.isHydrating) return;
 
     this.focusIdea = this.currentEntry.focus || '';
+    this.writeLocalBackup();
     void this.persistJournalToFirestore();
   }
 
@@ -245,8 +258,16 @@ export class App {
         },
         { merge: true }
       );
+      this.clearLocalBackup();
     } catch (error) {
-      console.warn('Failed to save Firestore journal. Keeping data in memory.', error);
+      console.warn('Failed to save Firestore journal. Using local backup.', error);
     }
+  }
+
+  private localDateKey(date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
