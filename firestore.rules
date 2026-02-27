@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // NOTE: This app currently writes without Firebase Auth.
+    // Restrict these rules once auth is added.
+    match /bulletJournal/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
