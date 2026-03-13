@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
+import { db } from './firebase';
 
 type RapidType = 'task' | 'event' | 'note';
 
@@ -39,10 +42,18 @@ const entryTemplate = (): DayEntry => ({
 export class App {
   protected readonly today = new Date().toISOString().split('T')[0];
   protected selectedDate = this.today;
-  protected journal: Record<string, DayEntry> = this.loadJournal();
+  protected journal: Record<string, DayEntry> = { [this.today]: entryTemplate() };
   protected rapidItem = '';
   protected rapidType: RapidType = 'task';
   protected focusIdea = this.currentEntry.focus;
+
+  private readonly localStorageKey = 'bullet-journal-data-angular';
+  private readonly journalDocRef = doc(db, 'bulletJournal', 'default');
+  private isHydrating = true;
+
+  constructor() {
+    void this.hydrateJournal();
+  }
 
   protected readonly taskIcons: Record<RapidType, string> = {
     task: '•',
@@ -115,10 +126,7 @@ export class App {
 
     this.journal[targetKey] = {
       ...targetEntry,
-      rapidLog: [
-        { ...item, done: false, migratedFrom: this.selectedDate },
-        ...targetEntry.rapidLog,
-      ],
+      rapidLog: [{ ...item, done: false, migratedFrom: this.selectedDate }, ...targetEntry.rapidLog],
     };
 
     this.updateEntry({ rapidLog: sourceLog });
@@ -152,24 +160,93 @@ export class App {
 
   protected trackByRapid = (_: number, item: RapidLogItem): string => item.id;
 
-  private loadJournal(): Record<string, DayEntry> {
-    if (typeof window === 'undefined') {
-      return { [this.today]: entryTemplate() };
-    }
+  private async hydrateJournal(): Promise<void> {
+    const localData = this.readLocalBackup();
+
     try {
-      const stored = localStorage.getItem('bullet-journal-data-angular');
-      if (stored) {
-        const parsed = JSON.parse(stored) as Record<string, DayEntry>;
-        return Object.keys(parsed).length > 0 ? parsed : { [this.today]: entryTemplate() };
+      const snap = await getDoc(this.journalDocRef);
+
+      if (snap.exists()) {
+        const remoteJournal = (snap.data()['journal'] as Record<string, DayEntry>) || {};
+        this.journal = this.normalizeJournal(remoteJournal);
+      } else if (localData && Object.keys(localData).length > 0) {
+        this.journal = this.normalizeJournal(localData);
+        await this.persistJournalToFirestore();
+        this.clearLocalBackup();
+      } else {
+        this.journal = { [this.today]: entryTemplate() };
       }
     } catch (error) {
-      console.warn('Failed to read journal data, resetting.', error);
+      console.warn('Failed to load Firestore journal, using local/in-memory fallback.', error);
+      this.journal = localData && Object.keys(localData).length > 0
+        ? this.normalizeJournal(localData)
+        : { [this.today]: entryTemplate() };
+    } finally {
+      this.isHydrating = false;
+      this.focusIdea = this.currentEntry.focus || '';
     }
-    return { [this.today]: entryTemplate() };
+  }
+
+  private normalizeJournal(data: Record<string, DayEntry>): Record<string, DayEntry> {
+    if (!data || Object.keys(data).length === 0) {
+      return { [this.today]: entryTemplate() };
+    }
+
+    const normalized: Record<string, DayEntry> = {};
+    for (const [date, entry] of Object.entries(data)) {
+      normalized[date] = {
+        ...entryTemplate(),
+        ...entry,
+        rapidLog: Array.isArray(entry?.rapidLog) ? entry.rapidLog : [],
+      };
+    }
+
+    if (!normalized[this.today]) {
+      normalized[this.today] = entryTemplate();
+    }
+
+    return normalized;
+  }
+
+  private readLocalBackup(): Record<string, DayEntry> | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    try {
+      const stored = localStorage.getItem(this.localStorageKey);
+      return stored ? (JSON.parse(stored) as Record<string, DayEntry>) : null;
+    } catch (error) {
+      console.warn('Failed to parse localStorage backup.', error);
+      return null;
+    }
+  }
+
+  private clearLocalBackup(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(this.localStorageKey);
+    }
   }
 
   private persistJournal(): void {
-    localStorage.setItem('bullet-journal-data-angular', JSON.stringify(this.journal));
+    if (this.isHydrating) return;
+
     this.focusIdea = this.currentEntry.focus || '';
+    void this.persistJournalToFirestore();
+  }
+
+  private async persistJournalToFirestore(): Promise<void> {
+    try {
+      await setDoc(
+        this.journalDocRef,
+        {
+          journal: this.journal,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.warn('Failed to save Firestore journal. Keeping data in memory.', error);
+    }
   }
 }
